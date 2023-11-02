@@ -32,7 +32,7 @@ function showtrace(trace::Group; yaxis=:step, Δt=0.001, fontsize=20, windowsize
   t0 = (-1.0, -1.0)
   for (i, e) ∈ enumerate(trace.events)
     ll1 = findfirst(l -> l[1] == e.node && l[2] == e.agent, lifelines)
-    if ll1 !== nothing
+    if ll1 !== nothing && e.response !== nothing
       ll2 = findfirst(l -> l[1] == e.node && l[2] == e.response.recipient, lifelines)
       t = yaxis === :time ? e.time/1000 : i
       t == t0[1] && (t = t0[2] + Δt)
@@ -44,7 +44,7 @@ function showtrace(trace::Group; yaxis=:step, Δt=0.001, fontsize=20, windowsize
           push!(xs, ll1)
           push!(ys, t)
           push!(us, 0.2)
-          s = "$(e.response.id)\n$(e.response) ≫ $(e.response.recipient)"
+          s = "time: $(e.time/1000) s$(e.response.id)\n$(e.response) ≫ $(e.response.recipient)"
           if e.stimulus !== nothing && e.stimulus.id != e.response.id
             s *= "\ndue to:\n$(e.stimulus.id)\n$(e.stimulus)"
           end
@@ -57,7 +57,7 @@ function showtrace(trace::Group; yaxis=:step, Δt=0.001, fontsize=20, windowsize
               push!(xs, ll1)
               push!(ys, t)
               push!(us, ll2-ll1)
-              s = "$(e.response.id)\n$(e.response)"
+              s = "time: $(e.time/1000) s\n$(e.response.id)\n$(e.response)"
               if e.stimulus !== nothing && e.stimulus.id != e.response.id
                 s *= "\ndue to:\n$(e.stimulus.id)\n$(e.stimulus)"
               end
@@ -70,7 +70,7 @@ function showtrace(trace::Group; yaxis=:step, Δt=0.001, fontsize=20, windowsize
         push!(xs, ll1)
         push!(ys, t)
         push!(us, ll2-ll1)
-        s = "$(e.response.id)\n$(e.response)"
+        s = "time: $(e.time/1000) s\n$(e.response.id)\n$(e.response)"
         if e.stimulus !== nothing && e.stimulus.id != e.response.id
           s *= "\ndue to:\n$(e.stimulus.id)\n$(e.stimulus)"
         end
@@ -83,7 +83,7 @@ function showtrace(trace::Group; yaxis=:step, Δt=0.001, fontsize=20, windowsize
           push!(xs, ll1 - 0.2)
           push!(ys, t)
           push!(us, 0.2)
-          push!(labels, "$(e.stimulus.id)\n$(e.stimulus.sender) ≫ $(e.stimulus)")
+          push!(labels, "time: $(e.time/1000) s\n$(e.stimulus.id)\n$(e.stimulus.sender) ≫ $(e.stimulus)")
           text!(ll1 - 0.2, t; text="$(i)", inspectable=false, fontsize)
           stimuli[e.stimulus.id] = t
         else

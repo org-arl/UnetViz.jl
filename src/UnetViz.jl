@@ -19,11 +19,13 @@ struct Event
   node::String
   thread::String
   stimulus::Union{Message,Nothing}
-  response::Message
+  response::Union{Message,Nothing}
+  info::Any
 end
 
 struct Group
   name::String
+  t0::Int64
   events::Vector{Event}
 end
 

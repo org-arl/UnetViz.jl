@@ -32,50 +32,65 @@ function showtrace(trace::Group; yaxis=:step, Δt=0.001, fontsize=20, windowsize
   t0 = (-1.0, -1.0)
   for (i, e) ∈ enumerate(trace.events)
     ll1 = findfirst(l -> l[1] == e.node && l[2] == e.agent, lifelines)
-    if ll1 !== nothing && e.response !== nothing
-      ll2 = findfirst(l -> l[1] == e.node && l[2] == e.response.recipient, lifelines)
-      t = yaxis === :time ? e.time/1000 : i
-      t == t0[1] && (t = t0[2] + Δt)
-      t0 = (e.time/1000, t)
-      stimuli[e.response.id] = t
-      if ll2 === nothing || ll1 == ll2
-        ndx = findall(e1 -> e1.stimulus !== nothing && e1.stimulus.id == e.response.id, trace.events)
-        if isempty(ndx)
+    if ll1 !== nothing
+      if e.response === nothing
+        t = yaxis === :time ? e.time/1000 : i
+        t == t0[1] && (t = t0[2] + Δt)
+        t0 = (e.time/1000, t)
+        push!(xs, ll1)
+        push!(ys, t)
+        push!(us, 0.2)
+        s = "time: $(e.time/1000) $(infostr(e.info))"
+        if e.stimulus !== nothing
+          s *= "\ndue to:\n$(e.stimulus.id)\n$(e.stimulus)"
+        end
+        push!(labels, s)
+        text!(ll1 + 0.1, t; text="$(i): $(e.info)", inspectable=false, fontsize)
+      else
+        ll2 = findfirst(l -> l[1] == e.node && l[2] == e.response.recipient, lifelines)
+        t = yaxis === :time ? e.time/1000 : i
+        stimuli[e.response.id] = t
+        t == t0[1] && (t = t0[2] + Δt)
+        t0 = (e.time/1000, t)
+        if ll2 === nothing || ll1 == ll2
+          ndx = findall(e1 -> e1.stimulus !== nothing && e1.stimulus.id == e.response.id, trace.events)
+          if isempty(ndx)
+            push!(xs, ll1)
+            push!(ys, t)
+            push!(us, 0.2)
+            s = "time: $(e.time/1000) s$(e.response.id)\n$(e.response) ≫ $(e.response.recipient)$(infostr(e.info))"
+            if e.stimulus !== nothing && e.stimulus.id != e.response.id
+              s *= "\ndue to:\n$(e.stimulus.id)\n$(e.stimulus)"
+            end
+            push!(labels, s)
+            text!(ll1 + 0.1, t; text="$(i): $(e.response)", inspectable=false, fontsize)
+          else
+            for j ∈ ndx
+              ll2 = findfirst(l -> l[1] == trace.events[j].node && l[2] == trace.events[j].agent, lifelines)
+              if ll1 != ll2
+                push!(xs, ll1)
+                push!(ys, t)
+                push!(us, ll2-ll1)
+                s = "time: $(e.time/1000) s\n$(e.response.id)\n$(e.response)$(infostr(e.info))"
+                if e.stimulus !== nothing && e.stimulus.id != e.response.id
+                  s *= "\ndue to:\n$(e.stimulus.id)\n$(e.stimulus)"
+                end
+                push!(labels, s)
+                text!((ll1 + ll2) / 2, t; text="$(i): $(e.response)", inspectable=false, fontsize)
+              end
+            end
+          end
+        else
           push!(xs, ll1)
           push!(ys, t)
-          push!(us, 0.2)
-          s = "time: $(e.time/1000) s$(e.response.id)\n$(e.response) ≫ $(e.response.recipient)"
+          push!(us, ll2-ll1)
+          s = "time: $(e.time/1000) s\n$(e.response.id)\n$(e.response)$(infostr(e.info))"
           if e.stimulus !== nothing && e.stimulus.id != e.response.id
             s *= "\ndue to:\n$(e.stimulus.id)\n$(e.stimulus)"
           end
           push!(labels, s)
-          text!(ll1 + 0.1, t; text="$(i): $(e.response)", inspectable=false, fontsize)
-        else
-          for j ∈ ndx
-            ll2 = findfirst(l -> l[1] == trace.events[j].node && l[2] == trace.events[j].agent, lifelines)
-            if ll1 != ll2
-              push!(xs, ll1)
-              push!(ys, t)
-              push!(us, ll2-ll1)
-              s = "time: $(e.time/1000) s\n$(e.response.id)\n$(e.response)"
-              if e.stimulus !== nothing && e.stimulus.id != e.response.id
-                s *= "\ndue to:\n$(e.stimulus.id)\n$(e.stimulus)"
-              end
-              push!(labels, s)
-              text!((ll1 + ll2) / 2, t; text="$(i): $(e.response)", inspectable=false, fontsize)
-            end
-          end
+          text!((ll1 + ll2) / 2, t; text="$(i): $(e.response)", inspectable=false, fontsize)
         end
-      else
-        push!(xs, ll1)
-        push!(ys, t)
-        push!(us, ll2-ll1)
-        s = "time: $(e.time/1000) s\n$(e.response.id)\n$(e.response)"
-        if e.stimulus !== nothing && e.stimulus.id != e.response.id
-          s *= "\ndue to:\n$(e.stimulus.id)\n$(e.stimulus)"
-        end
-        push!(labels, s)
-        text!((ll1 + ll2) / 2, t; text="$(i): $(e.response)", inspectable=false, fontsize)
       end
       if e.stimulus !== nothing
         t1 = get(stimuli, e.stimulus.id, nothing)
@@ -111,3 +126,5 @@ end
 
 showtrace(filename::AbstractString; kwargs...) = showtrace(load(filename); kwargs...)
 showtrace(filename::AbstractString, i; kwargs...) = showtrace(load(filename), i; kwargs...)
+
+infostr(s) = (s isa AbstractString || s isa Number) ? "\n$(s)" : ""

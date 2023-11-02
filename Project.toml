@@ -1,0 +1,8 @@
+name = "UnetViz"
+uuid = "9f8b9c85-6066-4cb5-9256-37ec30e2a76b"
+authors = ["Mandar Chitre <mandar@nus.edu.sg>"]
+version = "0.1.0"
+
+[deps]
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"

@@ -47,7 +47,12 @@ function showtrace(trace::Group; yaxis=:step, Δt=0.001, fontsize=20, windowsize
         push!(labels, s)
         text!(ll1 + 0.1, t; text="$(i): $(e.info)", inspectable=false, fontsize)
       else
-        ll2 = findfirst(l -> l[1] == e.node && l[2] == e.response.recipient, lifelines)
+        response_recipient = e.response.recipient
+        if response_recipient === nothing
+          ndx = findfirst(e1 -> e1.stimulus !== nothing && e1.stimulus.id == e.response.id, trace.events)
+          ndx === nothing || (response_recipient = trace.events[ndx].stimulus.recipient)
+        end
+        ll2 = findfirst(l -> l[1] == e.node && l[2] == response_recipient, lifelines)
         t = yaxis === :time ? e.time/1000 : i
         stimuli[e.response.id] = t
         t == t0[1] && (t = t0[2] + Δt)
@@ -58,7 +63,7 @@ function showtrace(trace::Group; yaxis=:step, Δt=0.001, fontsize=20, windowsize
             push!(xs, ll1)
             push!(ys, t)
             push!(us, 0.2)
-            s = "time: $(e.time/1000) s$(e.response.id)\n$(e.response) ≫ $(e.response.recipient)$(infostr(e.info))"
+            s = "time: $(e.time/1000) s$(e.response.id)\n$(e.response) ≫ $(response_recipient)$(infostr(e.info))"
             if e.stimulus !== nothing && e.stimulus.id != e.response.id
               s *= "\ndue to:\n$(e.stimulus.id)\n$(e.stimulus)"
             end

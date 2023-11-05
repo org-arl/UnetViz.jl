@@ -9,7 +9,7 @@ struct Message
   performative::Symbol
   msgtype::String
   sender::Union{String,Nothing}
-  recipient::String
+  recipient::Union{String,Nothing}
 end
 
 struct Event

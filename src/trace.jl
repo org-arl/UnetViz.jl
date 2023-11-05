@@ -37,7 +37,7 @@ function load(filename)
           Symbol(e2r["performative"]),
           e2r["clazz"],
           get(e2r, "sender", nothing),
-          e2r["recipient"]
+          get(e2r, "recipient", nothing)
         )
         t0 == nothing && (t0 = e2["time"])
         e = Event(
